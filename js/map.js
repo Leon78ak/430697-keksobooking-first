@@ -32,6 +32,8 @@ var FEATURES = [
   'conditioner'
 ];
 
+// var usersNumb = 8;
+
 /**
  * возвращает случайное целое
  * @param  {number} min
@@ -68,11 +70,9 @@ var randomUniqueArrayValue = function(array) {
  * функция-обертка для создания массива объектов
  * @return {array} [description]
  */
-var makeNotice = function() {
+var makeNotice = function(usersNumb) {
 
   var notices = [];
-
-  var usersNumb = 8;
 
   for (var i = 0; i < usersNumb; i++) {
     notices[i] = {
@@ -86,6 +86,7 @@ var makeNotice = function() {
         get title() {
           return randomUniqueArrayValue(TITLE);
         },
+        // здесь что-то не так!
         get address() {
           return notices[i].location.x + ' , ' + notices[i].location.y;
         },
@@ -109,4 +110,27 @@ var makeNotice = function() {
 
   return notices;
 }
+// переменная для нового массива, как имя?
+var notices = makeNotice(8);
+
+var map = document.querySelector('.map');
+var mapPins = map.querySelector('.map__pins');
+var template = document.querySelector('template');
+var similarPinTemplate = template.content.querySelector('.map__pin');
+
+map.classList.remove('map--faded');
+
+var renderPin = function (pin) {
+  var pinElement = similarPinTemplate.cloneNode(true);
+  pinElement.style =`left: ${notices[i].location.x}px; top: ${notices[i].location.y}px;`;
+  //как насчет такой записи строки?
+  return pinElement;
+}
+
+var fragment = document.createDocumentFragment();
+for (var i = 0; i < notices.length; i++) {
+  fragment.appendChild(renderPin(notices[i]))
+}
+mapPins.appendChild(fragment);
+
 
