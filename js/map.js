@@ -32,7 +32,20 @@ var FEATURES = [
   'conditioner'
 ];
 
-// var usersNumb = 8;
+var PRICE_MIN = 1000,
+    PRICE_MAX = 1000000;
+
+var MIN_X = 300,
+    MAX_X = 900,
+    MIN_Y = 100,
+    MAX_Y = 500;
+
+var MIN_ROOMS = 1,
+    MAX_ROOMS = 5,
+    MIN_GUESTS = 1,
+    MAX_GUESTS = 10;
+
+var PIN_HEIGHT = 18;
 
 /**
  * возвращает случайное целое
@@ -49,7 +62,7 @@ var randomInteger = function(min, max) {
 /**
  * возвращает случайное значение из переданного массива значений
  * @param {array} array - массив значений
- * @return {string}
+ * @return {*}
  */
 var randomArrayValue = function(array) {
   return array[Math.floor(Math.random() * array.length)];
@@ -71,10 +84,12 @@ var randomUniqueArrayValue = function(array) {
  * @return {array} [description]
  */
 var makeNotice = function(usersNumb) {
-
   var notices = [];
 
   for (var i = 0; i < usersNumb; i++) {
+    var x = randomInteger(MIN_X, MAX_X);
+    var y = randomInteger(MIN_Y, MAX_Y);
+
     notices[i] = {
       author: {
         get avatar() {
@@ -86,14 +101,11 @@ var makeNotice = function(usersNumb) {
         get title() {
           return randomUniqueArrayValue(TITLE);
         },
-        // здесь что-то не так!
-        get address() {
-          return notices[i].location.x + ' , ' + notices[i].location.y;
-        },
-        price: randomInteger(1000, 1000000),
+        address: x + ', ' + y,
+        price: randomInteger(PRICE_MIN, PRICE_MAX),
         type: randomArrayValue(TYPE_OF_BUILDING),
-        rooms: randomInteger(1, 5),
-        guests: randomInteger(1, 10),
+        rooms: randomInteger(MIN_ROOMS, MAX_ROOMS),
+        guests: randomInteger(MIN_GUESTS, MAX_GUESTS),
         checkin: randomArrayValue(CHECK_TIME),
         checkout: randomArrayValue(CHECK_TIME),
         features: [FEATURES],
@@ -102,8 +114,8 @@ var makeNotice = function(usersNumb) {
       },
 
       location: {
-        x: randomInteger(300, 900),
-        y: randomInteger(100, 500)
+        x: x,
+        y: y
       }
     }
   }
@@ -118,12 +130,27 @@ var mapPins = map.querySelector('.map__pins');
 var template = document.querySelector('template');
 var similarPinTemplate = template.content.querySelector('.map__pin');
 
-map.classList.remove('map--faded');
+// var pinElement = similarPinTemplate.cloneNode(true);
 
+map.classList.remove('map--faded');
+// добавить смещение острия метки!
+var getPinOffset = function() {
+  var offsetX = (similarPinTemplate.querySelector('img').height) + (similarPinTemplate.querySelector('img').padding) + PIN_HEIGHT;
+  var offsetY = (similarPinTemplate.querySelector('img').width) / 2;
+/2;
+}
+
+
+/**
+ * отрисовывает метку на карте
+ * @param  {array} pin - элемент массива объектов с данными
+ * @return {Element}
+ */
 var renderPin = function (pin) {
   var pinElement = similarPinTemplate.cloneNode(true);
-  pinElement.style =`left: ${notices[i].location.x}px; top: ${notices[i].location.y}px;`;
-  //как насчет такой записи строки?
+  pinElement.style ='left: ' + (pin.location.x +  + 'px; top:' + pin.location.y + 'px;';
+  pinElement.querySelector('img').src = notices[i].author.avatar;
+
   return pinElement;
 }
 
