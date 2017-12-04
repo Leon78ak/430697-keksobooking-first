@@ -11,11 +11,11 @@ var TITLE = [
   'Неуютное бунгало по колено в воде'
 ];
 
-var TYPE_OF_BUILDING = [
-  'flat',
-  'house',
-  'bungalo'
-];
+var TYPE_OF_BUILDING = {
+  flat: 'Квартира',
+  house: 'Дом',
+  bungalo: 'Бунгало'
+};
 
 var CHECK_TIME = [
   '12:00',
@@ -57,7 +57,7 @@ var randomInteger = function(min, max) {
   var rand = min + Math.random() * (max + 1 - min);
   rand = Math.floor(rand);
   return rand;
-}
+};
 
 /**
  * возвращает случайное значение из переданного массива значений
@@ -66,7 +66,7 @@ var randomInteger = function(min, max) {
  */
 var randomArrayValue = function(array) {
   return array[Math.floor(Math.random() * array.length)];
-}
+};
 
 /**
  * возвращает неповторяющееся случайное значение из переданного массива значений
@@ -77,7 +77,7 @@ var randomUniqueArrayValue = function(array) {
   var randValue = array[Math.floor(Math.random() * array.length)];
   array.splice(array.indexOf(randValue), 1);
   return randValue;
-}
+};
 
 /**
  * функция-обертка для создания массива объектов
@@ -98,12 +98,10 @@ var makeNotice = function(usersNumb) {
       },
 
       offer: {
-        get title() {
-          return randomUniqueArrayValue(TITLE);
-        },
+        title: randomUniqueArrayValue(TITLE),
         address: x + ', ' + y,
         price: randomInteger(PRICE_MIN, PRICE_MAX),
-        type: randomArrayValue(TYPE_OF_BUILDING),
+        type: randomArrayValue(Object.keys(TYPE_OF_BUILDING)),
         rooms: randomInteger(MIN_ROOMS, MAX_ROOMS),
         guests: randomInteger(MIN_GUESTS, MAX_GUESTS),
         checkin: randomArrayValue(CHECK_TIME),
@@ -121,19 +119,20 @@ var makeNotice = function(usersNumb) {
   }
 
   return notices;
-}
-// переменная для нового массива, как имя?
+};
+
 var notices = makeNotice(8);
 
 var map = document.querySelector('.map');
 var mapPins = map.querySelector('.map__pins');
+var mapFilters = map.querySelector('.map__filters-container');
 var template = document.querySelector('template');
 var similarPinTemplate = template.content.querySelector('.map__pin');
 var cardTemplate = template.content.querySelector('.map__card');
 
 
-
 map.classList.remove('map--faded');
+
 /**
  * функция возвращает смещение острия метки
  * @return {[array} массив значений смещение по x, смещение по y
@@ -144,12 +143,11 @@ var getPinOffset = function() {
   var offsetY = (similarPinTemplate.querySelector('img').width) / 2;
 
   return [offsetX, offsetY];
-}
-
+};
 
 /**
  * отрисовывает метку на карте
- * @param  {array} pin - элемент массива объектов с данными
+ * @param  {obj} pin - элемент массива объектов с данными
  * @return {Element}
  */
 var renderPin = function (pin) {
@@ -158,22 +156,38 @@ var renderPin = function (pin) {
   pinElement.querySelector('img').src = notices[i].author.avatar;
 
   return pinElement;
-}
+};
 
-var renderCard = function() {
+var renderCard = function(obj) {
   var cardElement = cardTemplate.cloneNode(true);
 
-  return cardElement;
-}
+  cardElement.querySelector('h3').textContent = obj.offer.title;
+  cardElement.querySelector('p small').textContent = obj.address;
+  cardElement.querySelector('.popup__price').textContent = obj.price;
+  cardElement.querySelector('h4').textContent = TYPE_OF_BUILDING[obj.offer.type];
+  cardElement.querySelector('h4 + p').textContent = obj.offer.rooms + ' для ' + obj.offer.guests + ' гостей';
+  cardElement.querySelector('h4 + p + p').textContent = 'Заезд после ' + obj.offer.checkin + ', выезд до' + obj.offer.checkout;
+  // cardElement.querySelector('')
+  // cardElement.querySelector('')
 
-// fragment.appendChild(renderCard(notices[i]));
+  return cardElement;
+};
+
+var fragmentCard = document.createDocumentFragment();
+for (var i = 0; i < notices.length; i++) {
+  fragmentCard.appendChild(renderCard(notices[i]));
+
+
+};
+
+map.insertBefore(fragmentCard, mapFilters);
 
 
 var fragmentPin = document.createDocumentFragment();
 for (var i = 0; i < notices.length; i++) {
-  fragment.appendChild(renderPin(notices[i]));
+  fragmentPin.appendChild(renderPin(notices[i]));
 
-}
+};
 mapPins.appendChild(fragmentPin);
 
 // var renderCard = function(data) {
