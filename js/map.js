@@ -129,15 +129,21 @@ var map = document.querySelector('.map');
 var mapPins = map.querySelector('.map__pins');
 var template = document.querySelector('template');
 var similarPinTemplate = template.content.querySelector('.map__pin');
+var cardTemplate = template.content.querySelector('.map__card');
 
-// var pinElement = similarPinTemplate.cloneNode(true);
+
 
 map.classList.remove('map--faded');
-// добавить смещение острия метки!
+/**
+ * функция возвращает смещение острия метки
+ * @return {[array} массив значений смещение по x, смещение по y
+ */
 var getPinOffset = function() {
-  var offsetX = (similarPinTemplate.querySelector('img').height) + (similarPinTemplate.querySelector('img').padding) + PIN_HEIGHT;
+  var offsetX = (similarPinTemplate.querySelector('img').height) + PIN_HEIGHT;
+  // как добавить паддинг вокруг img?
   var offsetY = (similarPinTemplate.querySelector('img').width) / 2;
-/2;
+
+  return [offsetX, offsetY];
 }
 
 
@@ -148,16 +154,28 @@ var getPinOffset = function() {
  */
 var renderPin = function (pin) {
   var pinElement = similarPinTemplate.cloneNode(true);
-  pinElement.style ='left: ' + (pin.location.x +  + 'px; top:' + pin.location.y + 'px;';
+  pinElement.style ='left: ' + (pin.location.x + getPinOffset()[0]) + 'px; top:' + (pin.location.y + getPinOffset()[1]) + 'px;';
   pinElement.querySelector('img').src = notices[i].author.avatar;
 
   return pinElement;
 }
 
-var fragment = document.createDocumentFragment();
-for (var i = 0; i < notices.length; i++) {
-  fragment.appendChild(renderPin(notices[i]))
+var renderCard = function() {
+  var cardElement = cardTemplate.cloneNode(true);
+
+  return cardElement;
 }
-mapPins.appendChild(fragment);
+
+// fragment.appendChild(renderCard(notices[i]));
 
 
+var fragmentPin = document.createDocumentFragment();
+for (var i = 0; i < notices.length; i++) {
+  fragment.appendChild(renderPin(notices[i]));
+
+}
+mapPins.appendChild(fragmentPin);
+
+// var renderCard = function(data) {
+//   var
+// }
