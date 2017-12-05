@@ -1,5 +1,7 @@
 'use strict';
 
+var usersNumb = 8;
+
 var TITLE = [
   'Большая уютная квартира',
   'Маленькая неуютная квартира',
@@ -74,9 +76,24 @@ var randomArrayValue = function(array) {
  * @return {string}
  */
 var randomUniqueArrayValue = function(array) {
-  var randValue = array[Math.floor(Math.random() * array.length)];
-  array.splice(array.indexOf(randValue), 1);
-  return randValue;
+  var randValue = Math.floor(Math.random() * array.length);
+  return array.splice(randValue, 1);
+};
+
+/**
+ * возвращает новый массив случайной длины случайных значений
+ * @param  {array} array  - массив значений
+ * @return {array}       новый массив
+ */
+var randomArray = function(array) {
+  var randValue = Math.floor(Math.random() * array.length);
+
+  function compareRandom(a, b) {
+    return Math.random() - 0.5;
+  }
+
+  array.sort(compareRandom);
+  return array.slice(0, randValue);
 };
 
 /**
@@ -106,7 +123,7 @@ var makeNotice = function(usersNumb) {
         guests: randomInteger(MIN_GUESTS, MAX_GUESTS),
         checkin: randomArrayValue(CHECK_TIME),
         checkout: randomArrayValue(CHECK_TIME),
-        features: [FEATURES],
+        features: randomArray(FEATURES),
         description: '',
         photos: []
       },
@@ -121,15 +138,16 @@ var makeNotice = function(usersNumb) {
   return notices;
 };
 
-var notices = makeNotice(8);
+var notices = makeNotice(usersNumb);
 
 var map = document.querySelector('.map');
 var mapPins = map.querySelector('.map__pins');
 var mapFilters = map.querySelector('.map__filters-container');
+var popupFeatures = map.querySelector('.popup__features');
 var template = document.querySelector('template');
 var similarPinTemplate = template.content.querySelector('.map__pin');
 var cardTemplate = template.content.querySelector('.map__card');
-
+var featuresTemplate = template.content.querySelector('.popup__features');
 
 map.classList.remove('map--faded');
 
@@ -158,6 +176,11 @@ var renderPin = function (pin) {
   return pinElement;
 };
 
+/**
+ * создает объявление-описание объекта недвижимости
+ * @param  {obj} obj элемент массива объектов с данными
+ * @return {Element}
+ */
 var renderCard = function(obj) {
   var cardElement = cardTemplate.cloneNode(true);
 
@@ -167,16 +190,13 @@ var renderCard = function(obj) {
   cardElement.querySelector('h4').textContent = TYPE_OF_BUILDING[obj.offer.type];
   cardElement.querySelector('h4 + p').textContent = obj.offer.rooms + ' для ' + obj.offer.guests + ' гостей';
   cardElement.querySelector('h4 + p + p').textContent = 'Заезд после ' + obj.offer.checkin + ', выезд до' + obj.offer.checkout;
-  // cardElement.querySelector('')
-  // cardElement.querySelector('')
-
+  cardElement.querySelector('.popup__features').innerHTML = '';
   return cardElement;
 };
 
 var fragmentCard = document.createDocumentFragment();
 for (var i = 0; i < notices.length; i++) {
   fragmentCard.appendChild(renderCard(notices[i]));
-
 
 };
 
@@ -188,8 +208,8 @@ for (var i = 0; i < notices.length; i++) {
   fragmentPin.appendChild(renderPin(notices[i]));
 
 };
+
 mapPins.appendChild(fragmentPin);
 
-// var renderCard = function(data) {
-//   var
-// }
+var fragmentFeature = document.createDocumentFragment();
+
