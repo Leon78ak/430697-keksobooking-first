@@ -176,6 +176,22 @@ var renderPin = function (pin) {
   return pinElement;
 };
 
+var fragmentPin = document.createDocumentFragment();
+for (var i = 0; i < notices.length; i++) {
+  fragmentPin.appendChild(renderPin(notices[i]));
+
+};
+mapPins.appendChild(fragmentPin);
+
+var createFeaturesElement = function (array) {
+  array.forEach(function(feature) {
+    var featureElement = document.createElement('li');
+    featureElement.classList.add('feature', 'feature--' + feature);
+
+    return featureElement;
+  });
+};
+
 /**
  * создает объявление-описание объекта недвижимости
  * @param  {obj} obj элемент массива объектов с данными
@@ -191,25 +207,14 @@ var renderCard = function(obj) {
   cardElement.querySelector('h4 + p').textContent = obj.offer.rooms + ' для ' + obj.offer.guests + ' гостей';
   cardElement.querySelector('h4 + p + p').textContent = 'Заезд после ' + obj.offer.checkin + ', выезд до' + obj.offer.checkout;
   cardElement.querySelector('.popup__features').innerHTML = '';
+  cardElement.querySelector('.popup__features').appendChild(createFeaturesElement(obj.offer.features));
+
   return cardElement;
 };
 
 var fragmentCard = document.createDocumentFragment();
 for (var i = 0; i < notices.length; i++) {
   fragmentCard.appendChild(renderCard(notices[i]));
-
 };
 
 map.insertBefore(fragmentCard, mapFilters);
-
-
-var fragmentPin = document.createDocumentFragment();
-for (var i = 0; i < notices.length; i++) {
-  fragmentPin.appendChild(renderPin(notices[i]));
-
-};
-
-mapPins.appendChild(fragmentPin);
-
-var fragmentFeature = document.createDocumentFragment();
-
