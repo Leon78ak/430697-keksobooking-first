@@ -183,14 +183,13 @@ for (var i = 0; i < notices.length; i++) {
 };
 mapPins.appendChild(fragmentPin);
 
-var createFeaturesElement = function (array) {
-  array.forEach(function(feature) {
-    var featureElement = document.createElement('li');
-    featureElement.classList.add('feature', 'feature--' + feature);
+// var createFeaturesElement = function (array) {
+//   return array.forEach(function(feature) {
+//     var featureElement = document.createElement('li');
+//     featureElement.classList.add('feature', 'feature--' + feature);
 
-    return featureElement;
-  });
-};
+//   });
+// };
 
 /**
  * создает объявление-описание объекта недвижимости
@@ -206,8 +205,8 @@ var renderCard = function(obj) {
   cardElement.querySelector('h4').textContent = TYPE_OF_BUILDING[obj.offer.type];
   cardElement.querySelector('h4 + p').textContent = obj.offer.rooms + ' для ' + obj.offer.guests + ' гостей';
   cardElement.querySelector('h4 + p + p').textContent = 'Заезд после ' + obj.offer.checkin + ', выезд до' + obj.offer.checkout;
-  cardElement.querySelector('.popup__features').innerHTML = '';
-  cardElement.querySelector('.popup__features').appendChild(createFeaturesElement(obj.offer.features));
+  // cardElement.querySelector('.popup__features').innerHTML = '';
+  // cardElement.querySelector('.popup__features').appendChild(createFeaturesElement(obj.offer.features));
 
   return cardElement;
 };
