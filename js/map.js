@@ -183,13 +183,13 @@ for (var i = 0; i < notices.length; i++) {
 };
 mapPins.appendChild(fragmentPin);
 
-// var createFeaturesElement = function (array) {
-//   return array.forEach(function(feature) {
-//     var featureElement = document.createElement('li');
-//     featureElement.classList.add('feature', 'feature--' + feature);
-
-//   });
-// };
+var createFeatureElement = function (feature) {
+  feature.forEach(function(feature) {
+    var featureElement = document.createElement('li');
+    featureElement.classList.add('feature', 'feature--' + feature);
+    return featureElement;
+  });
+};
 
 /**
  * создает объявление-описание объекта недвижимости
@@ -200,13 +200,20 @@ var renderCard = function(obj) {
   var cardElement = cardTemplate.cloneNode(true);
 
   cardElement.querySelector('h3').textContent = obj.offer.title;
-  cardElement.querySelector('p small').textContent = obj.address;
-  cardElement.querySelector('.popup__price').textContent = obj.price;
+  cardElement.querySelector('p small').textContent = obj.offer.address;
+  cardElement.querySelector('.popup__price').textContent = obj.offer.price + '&#x20bd;/ночь';
   cardElement.querySelector('h4').textContent = TYPE_OF_BUILDING[obj.offer.type];
   cardElement.querySelector('h4 + p').textContent = obj.offer.rooms + ' для ' + obj.offer.guests + ' гостей';
   cardElement.querySelector('h4 + p + p').textContent = 'Заезд после ' + obj.offer.checkin + ', выезд до' + obj.offer.checkout;
-  // cardElement.querySelector('.popup__features').innerHTML = '';
-  // cardElement.querySelector('.popup__features').appendChild(createFeaturesElement(obj.offer.features));
+  var featuresList = cardElement.querySelector('.popup__features');
+  featuresList.innerHTML = '';
+  var features = obj.offer.features;
+   featuresList.innerHTML = features.forEach(function(feature, features) {
+    var featureElement = document.createElement('li');
+    featureElement.classList.add('feature', 'feature--' + feature);
+  });
+  // featuresList.appendChild(createFeatureElement(obj.offer.features));
+
 
   return cardElement;
 };
