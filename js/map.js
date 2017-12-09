@@ -218,13 +218,15 @@ for (var i = 0; i < notices.length; i++) {
 
 map.insertBefore(fragmentCard, mapFilters);
 
-
+// module4
+//
 // после того как на блоке map__pin--main произойдет событие mouseup
 var map = document.querySelector('.map');
 var mapPinMain = map.querySelector('.map__pin--main');
 var mapPin = map.querySelectorAll('.map__pin');
 var noticeForm = document.querySelector('.notice__form');
 // добавим атрибут disabled блоку fieldset, содержащему поле формы
+// ?установить window.onload или прописать в разметке?
 var fieldset = noticeForm.querySelectorAll('fieldset');
 
 for (var i = 0; i < fieldset.length; i++) {
@@ -266,6 +268,7 @@ mapPinMain.addEventListener('mouseup', buttonMouseUpHandler);
 // });
 
 // отключим показ по умолчанию первой карточки из набора объявлений
+// ?(по ходу отключаем показ всех карточек, это так?)
 var popup = map.querySelectorAll('.popup');
 for (var i = 0; i < popup.length; i++) {
   popup[i].classList.add('hidden');
@@ -288,9 +291,23 @@ for (var i = 0; i < mapPin.length; i++) {
 
 //  и должен показываться элемент .popup
 //  ???
+var popupActive;
 
 
 //  При нажатии на элемент .popup__close карточка объявления должна скрываться.
+var popupClose = popupActive.querySelector('.popup__close');
+
+popup.addEventListener('click', function(evt) {
+  popup.classList.add('hidden');
+});
+
+var mapPinActive = map.querySelector('.map__pin--active');
+// обработчик для popup
+var popupClickHandler = function(evt) {
+  popup.classList.add('hidden');
+
+  mapPinActive.classList.remove(' ')
+}
 //  При этом должен деактивироваться элемент .map__pin, который был помечен как активный
 // При показе карточки на карточке должна отображаться актуальная информация
 //  о текущем выбранном объекте (заголовок, адрес, цена, время заезда и выезда).
