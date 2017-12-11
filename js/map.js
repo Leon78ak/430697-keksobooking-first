@@ -71,6 +71,20 @@ var randomArrayValue = function(array) {
 };
 
 /**
+ * создает массив чисел-номеров пользователей
+ * @param  {number} min
+ * @param  {number} max
+ * @return {array}
+ */
+var createArrayOfNumbers = function(min, max) {
+  var array = [];
+  for (var i = min; i <= max; i++) {
+    array.push(i);
+  }
+  return array;
+}
+
+/**
  * возвращает неповторяющееся случайное значение из переданного массива значений
  * @param {array} array - массив значений
  * @return {string}
@@ -86,23 +100,27 @@ var randomUniqueArrayValue = function(array) {
  * @return {array}       новый массив
  */
 var randomArray = function(array) {
-  var randValue = Math.floor(Math.random() * array.length);
-
+  // копируем исходный массив
+  var arrayCopy = array.slice(0);
+  // генерим случайное число - максимальное значение индекса массива больше 0
+  var randValue = Math.floor(1 + Math.random() * arrayCopy.length);
+  // перетрясем исходный массив значений в случайном порядке
   var compareRandom = function(a, b) {
     //  Math.random() возвращает результат от 0 до 1. Вычтем 0.5, чтобы область значений стала [-0.5 ... 0.5)
     return Math.random() - 0.5;
   }
-
-  array.sort(compareRandom);
-  return array.slice(0, randValue);
+  // отсортируем исходный массив значений в случайном порядке
+  arrayCopy.sort(compareRandom);
+  return arrayCopy.slice(0, randValue);
 };
 
 /**
- * функция-обертка для создания массива объектов
+ * функция-обертка для создания массива объектов с данными
  * @return {array} [description]
  */
-var makeNotice = function(usersNumb) {
+var createNotice = function(usersNumb) {
   var notices = [];
+  var arrayUsersNumbers = createArrayOfNumbers(1, usersNumb);
 
   for (var i = 0; i < usersNumb; i++) {
     var x = randomInteger(MIN_X, MAX_X);
@@ -111,8 +129,8 @@ var makeNotice = function(usersNumb) {
     notices[i] = {
       author: {
         get avatar() {
-          return 'img/avatars/user0' + randomInteger(1, usersNumb) + '.png';
-          }
+          return 'img/avatars/user0' + randomUniqueArrayValue(arrayUsersNumbers) + '.png';
+        }
       },
 
       offer: {
@@ -139,7 +157,7 @@ var makeNotice = function(usersNumb) {
   return notices;
 };
 
-var notices = makeNotice(usersNumb);
+var notices = createNotice(usersNumb);
 
 var map = document.querySelector('.map');
 var mapPins = map.querySelector('.map__pins');
@@ -180,8 +198,8 @@ var renderPin = function (pin) {
 var fragmentPin = document.createDocumentFragment();
 for (var i = 0; i < notices.length; i++) {
   fragmentPin.appendChild(renderPin(notices[i]));
-
 };
+
 mapPins.appendChild(fragmentPin);
 
 /**
@@ -193,8 +211,8 @@ var renderCard = function(card) {
   var cardElement = cardTemplate.cloneNode(true);
 
   cardElement.querySelector('h3').textContent = card.offer.title;
-  cardElement.querySelector('p small').textContent = card.address;
-  cardElement.querySelector('.popup__price').textContent = card.price;
+  cardElement.querySelector('p small').textContent = card.offer.address;
+  cardElement.querySelector('.popup__price').textContent = card.offer.price;
   cardElement.querySelector('h4').textContent = TYPE_OF_BUILDING[card.offer.type];
   cardElement.querySelector('h4 + p').textContent = card.offer.rooms + ' для ' + card.offer.guests + ' гостей';
   cardElement.querySelector('h4 + p + p').textContent = 'Заезд после ' + card.offer.checkin + ', выезд до' + card.offer.checkout;
@@ -207,20 +225,17 @@ var renderCard = function(card) {
     ul.appendChild(featureElement);
   });
   cardElement.querySelector('.popup__features + p').textContent = card.offer.description;
-  var images = cardElement.querySelectorAll('.popup__avatar');
-  for (var i = 0; i < images.length; i++) {
-    images[i].setAttribute('src', notices[i].author.avatar);
-  }
+  cardElement.querySelector('.popup__avatar').setAttribute('src', card.author.avatar);
 
   return cardElement;
 };
+// выводим первый элемент объявления в разметку
 
 var fragmentCard = document.createDocumentFragment();
-for (var i = 0; i < notices.length; i++) {
-  fragmentCard.appendChild(renderCard(notices[i]));
-};
+fragmentCard.appendChild(renderCard(notices[0]));
 
 map.insertBefore(fragmentCard, mapFilters);
+
 
 // module4
 //
@@ -230,7 +245,6 @@ var mapPinMain = map.querySelector('.map__pin--main');
 var mapPin = map.querySelectorAll('.map__pin');
 var noticeForm = document.querySelector('.notice__form');
 // добавим атрибут disabled блоку fieldset, содержащему поле формы
-// ?установить window.onload или прописать в разметке?
 var fieldset = noticeForm.querySelectorAll('fieldset');
 
 for (var i = 0; i < fieldset.length; i++) {
@@ -243,7 +257,7 @@ for (var i = 0; i < mapPin.length; i++) {
   }
 }
 // обработчик
-var buttonMouseUpHandler = function(evt) {
+var mainPinMouseUpHandler = function(evt) {
   map.classList.remove('map--faded');
   noticeForm.classList.remove('notice__form--disabled');
   for (var i = 0; i < fieldset.length; i++) {
@@ -257,68 +271,73 @@ var buttonMouseUpHandler = function(evt) {
   }
 }
 
-mapPinMain.addEventListener('mouseup', buttonMouseUpHandler);
-// у карты убрать класс map--faded;
-// mapPinMain.addEventListener('mouseup', function(evt) {
-//   map.classList.remove('map--faded');
-// });
-// // у формы убрать класс notice__form--disabled и сделать все поля формы активными
-// mapPinMain.addEventListener('mouseup', function(evt) {
-//   noticeForm.classList.remove('notice__form--disabled');
-// });
-// показать на карте метки похожих объявлений , созданные в прошлом задании;
-// mapPinMain.addEventListener('mouseup', function(evt) {
-//   mapPin[i].classList.remove('hidden');
-// });
+mapPinMain.addEventListener('mouseup', mainPinMouseUpHandler);
+
 
 // отключим показ по умолчанию первой карточки из набора объявлений
-// ?(по ходу отключаем показ всех карточек, это так?)
-var popup = map.querySelectorAll('.popup');
-for (var i = 0; i < popup.length; i++) {
-  popup[i].classList.add('hidden');
-}
-var activeElement = null;
+var popup = map.querySelector('.popup');
+popup.classList.add('hidden');
+
+var activePin = null;
 // добавляем  класс map__pin--active при клике на любой из элементов .map__pin
-var buttonClickHandler = function(evt) {
+var pinClickHandler = function(node) {
   // Если до этого у другого элемента существовал класс pin--active, то у этого элемента класс нужно убрать
-  if (activeElement) {
-    activeElement.classList.remove('map__pin--active');
+  if (activePin) {
+    activePin.classList.remove('map__pin--active');
   }
 
-  activeElement = evt.currentTarget;
-  activeElement.classList.add('map__pin--active');
+  activePin = node;
+  activePin.classList.add('map__pin--active');
 };
 
-for (var i = 0; i < mapPin.length; i++) {
-  mapPin[i].addEventListener('click', buttonClickHandler);
+// //  и должен показываться элемент .popup
+// создадим функцию открытия и закрытия попапа
+var openPopup = function() {
+  popup.classList.remove('hidden');
 }
 
-//  и должен показываться элемент .popup
-//  ???
-var popupActive;
-
-
-//  При нажатии на элемент .popup__close карточка объявления должна скрываться.
-var popupClose = popupActive.querySelector('.popup__close');
-
-popup.addEventListener('click', function(evt) {
+var closePopup = function() {
   popup.classList.add('hidden');
+}
+
+// делегируем обработку клика на пине на блок .map__pins
+var pinsContainer = map.querySelector('.map__pins');
+pinsContainer.addEventListener('click', function(evt) {
+  var target = evt.target;
+  while (target !== pinsContainer) {
+    if (target.className === 'map__pin') {
+      pinClickHandler(target);
+      return;
+    }
+    target = target.parentNode;
+  }
 });
 
-var mapPinActive = map.querySelector('.map__pin--active');
-// обработчик для popup
-var popupClickHandler = function(evt) {
-  popup.classList.add('hidden');
+// при клике на пине
+// for (var i = 0; i < mapPin.length; i++) {
+//   mapPin[i].addEventListener('click', pinClickHandler);
+// }
+// //  При нажатии на элемент .popup__close карточка объявления должна скрываться.
+// var popupClose = popupActive.querySelector('.popup__close');
 
-  mapPinActive.classList.remove(' ')
-}
-//  При этом должен деактивироваться элемент .map__pin, который был помечен как активный
-// При показе карточки на карточке должна отображаться актуальная информация
-//  о текущем выбранном объекте (заголовок, адрес, цена, время заезда и выезда).
-//  Добавить обработчики для альтернативного ввода с клавиатуры keydown для кнопок открытия/закрытия объявлений:
+// popup.addEventListener('click', function(evt) {
+//   popup.classList.add('hidden');
+// });
 
-// Если пин объявления в фокусе .map__pin, то диалог с подробностями должен показываться по нажатию кнопки ENTER
-// Когда диалог открыт, то клавиша ESC должна закрывать диалог и деактивировать элемент .map__pin,
-//  который был помечен как активный
-// Если диалог открыт и фокус находится на крестике,
-// то нажатие клавиши ENTER приводит к закрытию диалога и деактивации элемента .map__pin, который был помечен как активный
+// var mapPinActive = map.querySelector('.map__pin--active');
+// // обработчик для popup
+// var popupClickHandler = function(evt) {
+//   popup.classList.add('hidden');
+
+//   mapPinActive.classList.remove(' ')
+// }
+// //  При этом должен деактивироваться элемент .map__pin, который был помечен как активный
+// // При показе карточки на карточке должна отображаться актуальная информация
+// //  о текущем выбранном объекте (заголовок, адрес, цена, время заезда и выезда).
+// //  Добавить обработчики для альтернативного ввода с клавиатуры keydown для кнопок открытия/закрытия объявлений:
+
+// // Если пин объявления в фокусе .map__pin, то диалог с подробностями должен показываться по нажатию кнопки ENTER
+// // Когда диалог открыт, то клавиша ESC должна закрывать диалог и деактивировать элемент .map__pin,
+// //  который был помечен как активный
+// // Если диалог открыт и фокус находится на крестике,
+// // то нажатие клавиши ENTER приводит к закрытию диалога и деактивации элемента .map__pin, который был помечен как активный
