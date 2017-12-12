@@ -114,6 +114,13 @@ var randomArray = function(array) {
   return arrayCopy.slice(0, randValue);
 };
 
+var createUUID = function() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+    var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
+    return v.toString(16);
+  });
+};
+
 /**
  * функция-обертка для создания массива объектов с данными
  * @return {array} [description]
@@ -127,10 +134,10 @@ var createNotice = function(usersNumb) {
     var y = randomInteger(MIN_Y, MAX_Y);
 
     notices[i] = {
+      id: createUUID(),
+
       author: {
-        get avatar() {
-          return 'img/avatars/user0' + randomUniqueArrayValue(arrayUsersNumbers) + '.png';
-        }
+        avatar: 'img/avatars/user0' + randomUniqueArrayValue(arrayUsersNumbers) + '.png',
       },
 
       offer: {
@@ -190,8 +197,8 @@ var getPinOffset = function() {
 var renderPin = function (pin) {
   var pinElement = similarPinTemplate.cloneNode(true);
   pinElement.style ='left: ' + (pin.location.x + getPinOffset()[0]) + 'px; top:' + (pin.location.y + getPinOffset()[1]) + 'px;';
-  pinElement.querySelector('img').src = notices[i].author.avatar;
-
+  pinElement.querySelector('img').src = pin.author.avatar;
+  pinElement.setAttribute('id', pin.id);
   return pinElement;
 };
 
@@ -229,12 +236,13 @@ var renderCard = function(card) {
 
   return cardElement;
 };
-// выводим первый элемент объявления в разметку
 
-var fragmentCard = document.createDocumentFragment();
-fragmentCard.appendChild(renderCard(notices[0]));
 
-map.insertBefore(fragmentCard, mapFilters);
+
+// var fragmentCard = document.createDocumentFragment();
+// fragmentCard.appendChild(renderCard(notices[0]));
+
+// map.insertBefore(fragmentCard, mapFilters);
 
 
 // module4
@@ -273,10 +281,7 @@ var mainPinMouseUpHandler = function(evt) {
 
 mapPinMain.addEventListener('mouseup', mainPinMouseUpHandler);
 
-
 // отключим показ по умолчанию первой карточки из набора объявлений
-var popup = map.querySelector('.popup');
-popup.classList.add('hidden');
 
 var activePin = null;
 // добавляем  класс map__pin--active при клике на любой из элементов .map__pin
@@ -288,17 +293,27 @@ var pinClickHandler = function(node) {
 
   activePin = node;
   activePin.classList.add('map__pin--active');
+
+  var item = renderCard(notices.filter(function(item) {
+    if (item.id === node.getAttribute('id')) {
+      return item;
+    }
+  })[0]);
+  var fragmentCard = document.createDocumentFragment();
+  fragmentCard.appendChild(item);
+
+  map.insertBefore(fragmentCard, mapFilters);
 };
 
 // //  и должен показываться элемент .popup
 // создадим функцию открытия и закрытия попапа
-var openPopup = function() {
-  popup.classList.remove('hidden');
-}
+// var openPopup = function() {
+//   popup.classList.remove('hidden');
+// }
 
-var closePopup = function() {
-  popup.classList.add('hidden');
-}
+// var closePopup = function() {
+//   popup.classList.add('hidden');
+// }
 
 // делегируем обработку клика на пине на блок .map__pins
 var pinsContainer = map.querySelector('.map__pins');
@@ -313,25 +328,16 @@ pinsContainer.addEventListener('click', function(evt) {
   }
 });
 
-// при клике на пине
-// for (var i = 0; i < mapPin.length; i++) {
-//   mapPin[i].addEventListener('click', pinClickHandler);
-// }
-// //  При нажатии на элемент .popup__close карточка объявления должна скрываться.
-// var popupClose = popupActive.querySelector('.popup__close');
+var popup = map.querySelector('.popup');
+var closePopup = function() {
+  popup.classList.add('hidden');
+}
 
-// popup.addEventListener('click', function(evt) {
-//   popup.classList.add('hidden');
-// });
-
-// var mapPinActive = map.querySelector('.map__pin--active');
-// // обработчик для popup
-// var popupClickHandler = function(evt) {
-//   popup.classList.add('hidden');
-
-//   mapPinActive.classList.remove(' ')
-// }
+// При нажатии на элемент .popup__close карточка объявления должна скрываться
+var popupClose = map.querySelector('.popup__close');
+popupClose.addEventListener('click', closePopup());
 // //  При этом должен деактивироваться элемент .map__pin, который был помечен как активный
+
 // // При показе карточки на карточке должна отображаться актуальная информация
 // //  о текущем выбранном объекте (заголовок, адрес, цена, время заезда и выезда).
 // //  Добавить обработчики для альтернативного ввода с клавиатуры keydown для кнопок открытия/закрытия объявлений:
