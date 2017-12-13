@@ -196,8 +196,10 @@ var getPinOffset = function() {
  */
 var renderPin = function (pin) {
   var pinElement = similarPinTemplate.cloneNode(true);
+  var img = pinElement.querySelector('img');
+  img.src = pin.author.avatar;
+  img.setAttribute('tabindex', 0);
   pinElement.style ='left: ' + (pin.location.x + getPinOffset()[0]) + 'px; top:' + (pin.location.y + getPinOffset()[1]) + 'px;';
-  pinElement.querySelector('img').src = pin.author.avatar;
   pinElement.setAttribute('id', pin.id);
   return pinElement;
 };
@@ -254,6 +256,7 @@ var mapPin = map.querySelectorAll('.map__pin');
 var noticeForm = document.querySelector('.notice__form');
 // добавим атрибут disabled блоку fieldset, содержащему поле формы
 var fieldset = noticeForm.querySelectorAll('fieldset');
+var activePin = null;
 
 for (var i = 0; i < fieldset.length; i++) {
   fieldset[i].classList.add('disabled');
@@ -275,15 +278,29 @@ var mainPinMouseUpHandler = function(evt) {
   for (var i = 0; i < mapPin.length; i++) {
     if (mapPin[i].classList.contains('hidden')) {
       mapPin[i].classList.remove('hidden');
+      mapPin[i].addEventListener('keydown', pinKeyDownHandler);
     }
   }
 }
 
 mapPinMain.addEventListener('mouseup', mainPinMouseUpHandler);
 
+var openPopup = function(node) {
+  var item = renderCard(notices.filter(function(item) {
+    if (item.id === node.getAttribute('id')) {
+      return item;
+    }
+  })[0]);
+
+  var fragmentCard = document.createDocumentFragment();
+  fragmentCard.appendChild(item);
+
+  map.insertBefore(fragmentCard, mapFilters);
+}
+
 // отключим показ по умолчанию первой карточки из набора объявлений
 
-var activePin = null;
+
 // добавляем  класс map__pin--active при клике на любой из элементов .map__pin
 var pinClickHandler = function(node) {
   // Если до этого у другого элемента существовал класс pin--active, то у этого элемента класс нужно убрать
@@ -294,26 +311,29 @@ var pinClickHandler = function(node) {
   activePin = node;
   activePin.classList.add('map__pin--active');
 
-  var item = renderCard(notices.filter(function(item) {
-    if (item.id === node.getAttribute('id')) {
-      return item;
-    }
-  })[0]);
-  var fragmentCard = document.createDocumentFragment();
-  fragmentCard.appendChild(item);
-
-  map.insertBefore(fragmentCard, mapFilters);
+  openPopup(activePin);
 };
 
+var popupClose = function() {
+for (var i = 0; i < map.children.length; i++) {
+    if (map.children[i].classList.contains('popup')) {
+      var popup = map.children[i];
+      map.removeChild(popup);
+
+      activePin.classList.remove('map__pin--active');
+    }
+  }
+};
 // //  и должен показываться элемент .popup
 // создадим функцию открытия и закрытия попапа
 // var openPopup = function() {
 //   popup.classList.remove('hidden');
 // }
-
-// var closePopup = function() {
-//   popup.classList.add('hidden');
-// }
+var pinKeyDownHandler = function(evt) {
+  if (evt.keyCode === 13) {
+    openPopup();
+  }
+}
 
 // делегируем обработку клика на пине на блок .map__pins
 var pinsContainer = map.querySelector('.map__pins');
@@ -322,21 +342,37 @@ pinsContainer.addEventListener('click', function(evt) {
   while (target !== pinsContainer) {
     if (target.className === 'map__pin') {
       pinClickHandler(target);
+
+      document.addEventListener('keydown', function(evt) {
+        if (evt.keyCode === 27) {
+          popupClose();
+        }
+      });
       return;
     }
     target = target.parentNode;
   }
 });
 
-var popup = map.querySelector('.popup');
-var closePopup = function() {
-  popup.classList.add('hidden');
-}
+// document.addEventListener('keydown', function(evt) {
+//   var target = evt.target;
+//   if (target.classList.contains('map__pin--main')) {
+//     return;
+//   }
+//   else if (target.className === 'map__pin' && evt.keyCode === 13) {
+//     console.log(find);
+//   }
+// }, true)
 
-// При нажатии на элемент .popup__close карточка объявления должна скрываться
-var popupClose = map.querySelector('.popup__close');
-popupClose.addEventListener('click', closePopup());
-// //  При этом должен деактивироваться элемент .map__pin, который был помечен как активный
+map.addEventListener('click',function(evt) {
+  var target = evt.target;
+
+  if (target && target.className === 'popup__close') {
+    popupClose();
+  }
+});
+
+
 
 // // При показе карточки на карточке должна отображаться актуальная информация
 // //  о текущем выбранном объекте (заголовок, адрес, цена, время заезда и выезда).
