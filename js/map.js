@@ -198,7 +198,6 @@ var renderPin = function (pin) {
   var pinElement = similarPinTemplate.cloneNode(true);
   var img = pinElement.querySelector('img');
   img.src = pin.author.avatar;
-  img.setAttribute('tabindex', 0);
   pinElement.style ='left: ' + (pin.location.x + getPinOffset()[0]) + 'px; top:' + (pin.location.y + getPinOffset()[1]) + 'px;';
   pinElement.setAttribute('id', pin.id);
   return pinElement;
@@ -267,7 +266,11 @@ for (var i = 0; i < mapPin.length; i++) {
     mapPin[i].classList.add('hidden');
   }
 }
-// обработчик
+/**
+ * обработчик события mouseup на главном пине
+ * @param  {[type]} evt [description]
+ * @return {[type]}     [description]
+ */
 var mainPinMouseUpHandler = function(evt) {
   map.classList.remove('map--faded');
   noticeForm.classList.remove('notice__form--disabled');
@@ -354,16 +357,6 @@ pinsContainer.addEventListener('click', function(evt) {
   }
 });
 
-// document.addEventListener('keydown', function(evt) {
-//   var target = evt.target;
-//   if (target.classList.contains('map__pin--main')) {
-//     return;
-//   }
-//   else if (target.className === 'map__pin' && evt.keyCode === 13) {
-//     console.log(find);
-//   }
-// }, true)
-
 map.addEventListener('click',function(evt) {
   var target = evt.target;
 
@@ -372,14 +365,20 @@ map.addEventListener('click',function(evt) {
   }
 });
 
+/**
+ * обработчик при нажатии enter на кнопке закрытия попапа
+ * @param  {[type]} evt [description]
+ * @return {[type]}     [description]
+ */
+var popupKeydownHandler = function(evt) {
+  var target = evt.target;
 
-
-// // При показе карточки на карточке должна отображаться актуальная информация
-// //  о текущем выбранном объекте (заголовок, адрес, цена, время заезда и выезда).
-// //  Добавить обработчики для альтернативного ввода с клавиатуры keydown для кнопок открытия/закрытия объявлений:
-
-// // Если пин объявления в фокусе .map__pin, то диалог с подробностями должен показываться по нажатию кнопки ENTER
-// // Когда диалог открыт, то клавиша ESC должна закрывать диалог и деактивировать элемент .map__pin,
-// //  который был помечен как активный
-// // Если диалог открыт и фокус находится на крестике,
-// // то нажатие клавиши ENTER приводит к закрытию диалога и деактивации элемента .map__pin, который был помечен как активный
+  if (target && target.className === 'popup__close') {
+    if (evt.keyCode === 13) {
+      popupClose();
+    }
+  }
+};
+// Если диалог открыт и фокус находится на крестике,
+// то нажатие клавиши ENTER приводит к закрытию диалога и деактивации элемента .map__pin, который был помечен как активный
+map.addEventListener('keydown', popupKeydownHandler, true);
