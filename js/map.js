@@ -13,7 +13,7 @@ var TITLE = [
   'Неуютное бунгало по колено в воде'
 ];
 
-var TYPE_OF_BUILDING = {
+var TYPE_OF_ACCOMODATION = {
   flat: 'Квартира',
   house: 'Дом',
   bungalo: 'Бунгало'
@@ -149,7 +149,7 @@ var createNotice = function (usersNumb) {
         title: randomUniqueArrayValue(TITLE),
         address: x + ', ' + y,
         price: randomInteger(PRICE_MIN, PRICE_MAX),
-        type: randomArrayValue(Object.keys(TYPE_OF_BUILDING)),
+        type: randomArrayValue(Object.keys(TYPE_OF_ACCOMODATION)),
         rooms: randomInteger(MIN_ROOMS, MAX_ROOMS),
         guests: randomInteger(MIN_GUESTS, MAX_GUESTS),
         checkin: randomArrayValue(CHECK_TIME),
@@ -225,7 +225,7 @@ var renderCard = function (card) {
   cardElement.querySelector('h3').textContent = card.offer.title;
   cardElement.querySelector('p small').textContent = card.offer.address;
   cardElement.querySelector('.popup__price').textContent = card.offer.price;
-  cardElement.querySelector('h4').textContent = TYPE_OF_BUILDING[card.offer.type];
+  cardElement.querySelector('h4').textContent = TYPE_OF_ACCOMODATION[card.offer.type];
   cardElement.querySelector('h4 + p').textContent = card.offer.rooms + ' для ' + card.offer.guests + ' гостей';
   cardElement.querySelector('h4 + p + p').textContent = 'Заезд после ' + card.offer.checkin + ', выезд до' + card.offer.checkout;
   var ul = cardElement.querySelector('.popup__features');
@@ -308,7 +308,6 @@ var pinClickHandler = function (node) {
     activePin.classList.remove('map__pin--active');
     popupClose();
   }
-
   activePin = node;
   activePin.classList.add('map__pin--active');
 
@@ -407,22 +406,31 @@ timeIn.addEventListener('change', function (evt) {
 var typeOfAccomodation = noticeForm.querySelector('#type');
 var price = noticeForm.querySelector('#price');
 
-typeOfAccomodation.addEventListener('change', function (evt) {
-  switch (typeOfAccomodation.value) {
-    case 'bungalo':
-      price.min = 0;
-      break;
-    case 'flat':
-      price.min = 1000;
-      break;
-    case 'house':
-      price.min = 5000;
-      break;
-    case 'palace':
-      price.min = 10000;
-      break;
-  }
-});
+var TYPE_TO_PRICE = {
+  bungalo: 0,
+  flat: 1000,
+  house: 5000,
+  palace: 10000
+};
+
+var syncPrice = function() {
+  var selectedField = typeOfAccomodation.value;
+  price.min = TYPE_TO_PRICE[selectedField];
+};
+
+// при загрузке страницы синхронизируем поле формы
+window.syncPrice();
+
+var changeTypeOfAccomodationHandler = function() {
+  syncPrice();
+};
+
+typeOfAccomodation.addEventListener('change', changeTypeOfAccomodationHandler);
+
+noticeForm.addEventListener('submit', function (event) {
+
+  console.log('clicked on validate')
+})
 
 // Количество комнат связано с количеством гостей:
 // 1 комната — «для одного гостя»
@@ -439,17 +447,41 @@ var capacity = noticeForm.querySelector('#capacity');
 // При отправке формы нужно проверить правильно ли заполнены поля и если какие-то поля заполнены неверно,
 //  то нужно выделить неверные поля красной рамкой
 var titleInput = noticeForm.querySelector('#title');
+var addressInput = noticeForm.querySelector('#address');
+var priceInput = noticeForm.querySelector('#price');
 
-var titleInputHandler = function() {
-  if (titleInput.validity.tooShort) {
-    titleInput.setCustomValidity('Заголовок должен быть не менее 30 символов!');
+
+titleInput.addEventListener('invalid', function (evt) {
+    if (titleInput.validity.tooShort) {
+    titleInput.setCustomValidity('Заголовок должен состоять минимум из ' + titleInput.getAttribute('minlength') + ' символов');
   } else if (titleInput.validity.tooLong) {
-    titleInput.setCustomValidity('Заголовок не должен превышать <4q>``</4q>0 символов!');
+    titleInput.setCustomValidity('Заголовок должен состоять максимум из ' + titleInput.getAttribute('maxlength') + ' символов');
   } else if (titleInput.validity.valueMissing) {
-    titleInput.setCustomValidity('Обязательное поле!');
+    titleInput.setCustomValidity('Обязательное поле');
   } else {
     titleInput.setCustomValidity('');
   }
+});
+
+var addressInputHandler = function(evt) {
+  if (addressInput.validity.valueMissing) {
+    addressInput.setCustomValidity('Обязательное поле!');
+  } else {
+    addressInput.setCustomValidity('');
+  }
 };
 
-titleInput.addEventListener('invalid', titleInputHandler);
+var priceInputHandler = function(evt) {
+  if (priceInput.validity.rangeUnderflow) {
+    priceInput.setCustomValidity('Минимальное значение цены ' + min);
+  } else if (priceInput.validity.tooLong) {
+    priceInput.setCustomValidity('Максимальное значение цены ' + max);
+  } else if (priceInput.validity.valueMissing) {
+    priceInput.setCustomValidity('Обязательное поле!');
+  } else {
+    priceInput.setCustomValidity('');
+  }
+};
+
+priceInput.addEventListener('invalid', priceInputHandler);
+addressInput.addEventListener('invalid', addressInputHandler);
