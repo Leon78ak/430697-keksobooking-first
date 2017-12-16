@@ -13,7 +13,7 @@ var TITLE = [
   'Неуютное бунгало по колено в воде'
 ];
 
-var TYPE_OF_BUILDING = {
+var TYPE_OF_ACCOMODATION = {
   flat: 'Квартира',
   house: 'Дом',
   bungalo: 'Бунгало'
@@ -35,19 +35,22 @@ var FEATURES = [
 ];
 
 var PRICE_MIN = 1000,
-    PRICE_MAX = 1000000;
+  PRICE_MAX = 1000000;
 
 var MIN_X = 300,
-    MAX_X = 900,
-    MIN_Y = 100,
-    MAX_Y = 500;
+  MAX_X = 900,
+  MIN_Y = 100,
+  MAX_Y = 500;
 
 var MIN_ROOMS = 1,
-    MAX_ROOMS = 5,
-    MIN_GUESTS = 1,
-    MAX_GUESTS = 10;
+  MAX_ROOMS = 5,
+  MIN_GUESTS = 1,
+  MAX_GUESTS = 10;
 
 var PIN_HEIGHT = 18;
+
+var ESC_KEYCODE = 27,
+  ENTER_KEYCODE = 13;
 
 /**
  * возвращает случайное целое
@@ -55,7 +58,7 @@ var PIN_HEIGHT = 18;
  * @param  {number} max
  * @return {number}
  */
-var randomInteger = function(min, max) {
+var randomInteger = function (min, max) {
   var rand = min + Math.random() * (max + 1 - min);
   rand = Math.floor(rand);
   return rand;
@@ -66,8 +69,22 @@ var randomInteger = function(min, max) {
  * @param {array} array - массив значений
  * @return {*}
  */
-var randomArrayValue = function(array) {
+var randomArrayValue = function (array) {
   return array[Math.floor(Math.random() * array.length)];
+};
+
+/**
+ * создает массив чисел-номеров пользователей
+ * @param  {number} min
+ * @param  {number} max
+ * @return {array}
+ */
+var createArrayOfNumbers = function (min, max) {
+  var array = [];
+  for (var i = min; i <= max; i++) {
+    array.push(i);
+  }
+  return array;
 };
 
 /**
@@ -75,7 +92,7 @@ var randomArrayValue = function(array) {
  * @param {array} array - массив значений
  * @return {string}
  */
-var randomUniqueArrayValue = function(array) {
+var randomUniqueArrayValue = function (array) {
   var randValue = Math.floor(Math.random() * array.length);
   return array.splice(randValue, 1);
 };
@@ -85,41 +102,54 @@ var randomUniqueArrayValue = function(array) {
  * @param  {array} array  - массив значений
  * @return {array}       новый массив
  */
-var randomArray = function(array) {
-  var randValue = Math.floor(Math.random() * array.length);
-
-  var compareRandom = function(a, b) {
+var randomArray = function (array) {
+  // копируем исходный массив
+  var arrayCopy = array.slice(0);
+  // генерим случайное число - максимальное значение индекса массива больше 0
+  var randValue = Math.floor(1 + Math.random() * arrayCopy.length);
+  // перетрясем исходный массив значений в случайном порядке
+  var compareRandom = function (a, b) {
     //  Math.random() возвращает результат от 0 до 1. Вычтем 0.5, чтобы область значений стала [-0.5 ... 0.5)
     return Math.random() - 0.5;
-  }
+  };
 
-  array.sort(compareRandom);
-  return array.slice(0, randValue);
+  // отсортируем исходный массив значений в случайном порядке
+  arrayCopy.sort(compareRandom);
+  return arrayCopy.slice(0, randValue);
+};
+
+var createUUID = function() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+    var r = Math.random() * 16 | 0, v = c == 'x' ? r : (r&0x3|0x8);
+    return v.toString(16);
+  });
 };
 
 /**
- * функция-обертка для создания массива объектов
- * @return {array} [description]
+ * функция для создания массива объектов объявлений
+ * @param  {number} usersNumb количество пользователей
+ * @return {array}
  */
-var makeNotice = function(usersNumb) {
+var createNotice = function (usersNumb) {
   var notices = [];
+  var arrayUsersNumbers = createArrayOfNumbers(1, usersNumb);
 
   for (var i = 0; i < usersNumb; i++) {
     var x = randomInteger(MIN_X, MAX_X);
     var y = randomInteger(MIN_Y, MAX_Y);
 
     notices[i] = {
+      id: createUUID(),
+
       author: {
-        get avatar() {
-          return 'img/avatars/user0' + randomInteger(1, usersNumb) + '.png';
-          }
+        avatar: 'img/avatars/user0' + randomUniqueArrayValue(arrayUsersNumbers) + '.png',
       },
 
       offer: {
         title: randomUniqueArrayValue(TITLE),
         address: x + ', ' + y,
         price: randomInteger(PRICE_MIN, PRICE_MAX),
-        type: randomArrayValue(Object.keys(TYPE_OF_BUILDING)),
+        type: randomArrayValue(Object.keys(TYPE_OF_ACCOMODATION)),
         rooms: randomInteger(MIN_ROOMS, MAX_ROOMS),
         guests: randomInteger(MIN_GUESTS, MAX_GUESTS),
         checkin: randomArrayValue(CHECK_TIME),
@@ -139,24 +169,20 @@ var makeNotice = function(usersNumb) {
   return notices;
 };
 
-var notices = makeNotice(usersNumb);
+var notices = createNotice(usersNumb);
 
 var map = document.querySelector('.map');
 var mapPins = map.querySelector('.map__pins');
 var mapFilters = map.querySelector('.map__filters-container');
-var popupFeatures = map.querySelector('.popup__features');
 var template = document.querySelector('template');
 var similarPinTemplate = template.content.querySelector('.map__pin');
 var cardTemplate = template.content.querySelector('.map__card');
-var featuresTemplate = template.content.querySelector('.popup__features');
-
-// map.classList.remove('map--faded');
 
 /**
- * функция возвращает смещение острия метки
- * @return {[array} массив значений смещение по x, смещение по y
+ * [getPinOffset description]
+ * @return {[type]} [description]
  */
-var getPinOffset = function() {
+var getPinOffset = function () {
   var offsetX = (similarPinTemplate.querySelector('img').height) + PIN_HEIGHT;
   // как добавить паддинг вокруг img?
   var offsetY = (similarPinTemplate.querySelector('img').width) / 2;
@@ -171,17 +197,21 @@ var getPinOffset = function() {
  */
 var renderPin = function (pin) {
   var pinElement = similarPinTemplate.cloneNode(true);
+  var img = pinElement.querySelector('img');
+  img.src = pin.author.avatar;
   pinElement.style ='left: ' + (pin.location.x + getPinOffset()[0]) + 'px; top:' + (pin.location.y + getPinOffset()[1]) + 'px;';
-  pinElement.querySelector('img').src = notices[i].author.avatar;
-
+  pinElement.setAttribute('id', pin.id);
   return pinElement;
 };
 
 var fragmentPin = document.createDocumentFragment();
-for (var i = 0; i < notices.length; i++) {
-  fragmentPin.appendChild(renderPin(notices[i]));
+// for (var i = 0; i < notices.length; i++) {
+//   fragmentPin.appendChild(renderPin(notices[i]));
+// };
+notices.forEach(function (notice) {
+  fragmentPin.appendChild(renderPin(notice));
+});
 
-};
 mapPins.appendChild(fragmentPin);
 
 /**
@@ -189,49 +219,39 @@ mapPins.appendChild(fragmentPin);
  * @param  {card} card элемент массива объектов с данными
  * @return {Element}
  */
-var renderCard = function(card) {
+var renderCard = function (card) {
   var cardElement = cardTemplate.cloneNode(true);
 
   cardElement.querySelector('h3').textContent = card.offer.title;
-  cardElement.querySelector('p small').textContent = card.address;
-  cardElement.querySelector('.popup__price').textContent = card.price;
-  cardElement.querySelector('h4').textContent = TYPE_OF_BUILDING[card.offer.type];
+  cardElement.querySelector('p small').textContent = card.offer.address;
+  cardElement.querySelector('.popup__price').textContent = card.offer.price;
+  cardElement.querySelector('h4').textContent = TYPE_OF_ACCOMODATION[card.offer.type];
   cardElement.querySelector('h4 + p').textContent = card.offer.rooms + ' для ' + card.offer.guests + ' гостей';
   cardElement.querySelector('h4 + p + p').textContent = 'Заезд после ' + card.offer.checkin + ', выезд до' + card.offer.checkout;
   var ul = cardElement.querySelector('.popup__features');
   ul.innerHTML = '';
   var features = card.offer.features;
-  features.forEach(function(feature) {
+  features.forEach(function (feature) {
     var featureElement = document.createElement('li');
     featureElement.classList.add('feature', 'feature--' + feature);
     ul.appendChild(featureElement);
   });
   cardElement.querySelector('.popup__features + p').textContent = card.offer.description;
-  var images = cardElement.querySelectorAll('.popup__avatar');
-  for (var i = 0; i < images.length; i++) {
-    images[i].setAttribute('src', notices[i].author.avatar);
-  }
+  cardElement.querySelector('.popup__avatar').setAttribute('src', card.author.avatar);
 
   return cardElement;
 };
 
-var fragmentCard = document.createDocumentFragment();
-for (var i = 0; i < notices.length; i++) {
-  fragmentCard.appendChild(renderCard(notices[i]));
-};
-
-map.insertBefore(fragmentCard, mapFilters);
 
 // module4
 //
 // после того как на блоке map__pin--main произойдет событие mouseup
-var map = document.querySelector('.map');
 var mapPinMain = map.querySelector('.map__pin--main');
 var mapPin = map.querySelectorAll('.map__pin');
 var noticeForm = document.querySelector('.notice__form');
 // добавим атрибут disabled блоку fieldset, содержащему поле формы
-// ?установить window.onload или прописать в разметке?
 var fieldset = noticeForm.querySelectorAll('fieldset');
+var activePin = null;
 
 for (var i = 0; i < fieldset.length; i++) {
   fieldset[i].classList.add('disabled');
@@ -242,8 +262,12 @@ for (var i = 0; i < mapPin.length; i++) {
     mapPin[i].classList.add('hidden');
   }
 }
-// обработчик
-var buttonMouseUpHandler = function(evt) {
+/**
+ * обработчик события mouseup на главном пине
+ * @param  {[type]} evt [description]
+ * @return {[type]}     [description]
+ */
+var mainPinMouseUpHandler = function() {
   map.classList.remove('map--faded');
   noticeForm.classList.remove('notice__form--disabled');
   for (var i = 0; i < fieldset.length; i++) {
@@ -253,72 +277,211 @@ var buttonMouseUpHandler = function(evt) {
   for (var i = 0; i < mapPin.length; i++) {
     if (mapPin[i].classList.contains('hidden')) {
       mapPin[i].classList.remove('hidden');
+      mapPin[i].addEventListener('keydown', pinKeyDownHandler);
     }
   }
-}
-
-mapPinMain.addEventListener('mouseup', buttonMouseUpHandler);
-// у карты убрать класс map--faded;
-// mapPinMain.addEventListener('mouseup', function(evt) {
-//   map.classList.remove('map--faded');
-// });
-// // у формы убрать класс notice__form--disabled и сделать все поля формы активными
-// mapPinMain.addEventListener('mouseup', function(evt) {
-//   noticeForm.classList.remove('notice__form--disabled');
-// });
-// показать на карте метки похожих объявлений , созданные в прошлом задании;
-// mapPinMain.addEventListener('mouseup', function(evt) {
-//   mapPin[i].classList.remove('hidden');
-// });
-
-// отключим показ по умолчанию первой карточки из набора объявлений
-// ?(по ходу отключаем показ всех карточек, это так?)
-var popup = map.querySelectorAll('.popup');
-for (var i = 0; i < popup.length; i++) {
-  popup[i].classList.add('hidden');
-}
-var activeElement = null;
-// добавляем  класс map__pin--active при клике на любой из элементов .map__pin
-var buttonClickHandler = function(evt) {
-  // Если до этого у другого элемента существовал класс pin--active, то у этого элемента класс нужно убрать
-  if (activeElement) {
-    activeElement.classList.remove('map__pin--active');
-  }
-
-  activeElement = evt.currentTarget;
-  activeElement.classList.add('map__pin--active');
 };
 
-for (var i = 0; i < mapPin.length; i++) {
-  mapPin[i].addEventListener('click', buttonClickHandler);
-}
+mapPinMain.addEventListener('mouseup', mainPinMouseUpHandler);
 
-//  и должен показываться элемент .popup
-//  ???
-var popupActive;
+var openPopup = function (node) {
+  var node = node;
+  var item = renderCard(notices.filter(function (item) {
+    if (item.id === node.getAttribute('id')) {
+      return item;
+    }
+  })[0]);
+
+  var fragmentCard = document.createDocumentFragment();
+  fragmentCard.appendChild(item);
+
+  map.insertBefore(fragmentCard, mapFilters);
+};
+
+// отключим показ по умолчанию первой карточки из набора объявлений
 
 
-//  При нажатии на элемент .popup__close карточка объявления должна скрываться.
-var popupClose = popupActive.querySelector('.popup__close');
+// добавляем  класс map__pin--active при клике на любой из элементов .map__pin
+var pinClickHandler = function (node) {
+  // Если до этого у другого элемента существовал класс pin--active, то у этого элемента класс нужно убрать
+  if (activePin) {
+    activePin.classList.remove('map__pin--active');
+    popupClose();
+  }
+  activePin = node;
+  activePin.classList.add('map__pin--active');
 
-popup.addEventListener('click', function(evt) {
-  popup.classList.add('hidden');
+  openPopup(activePin);
+};
+
+var popupClose = function() {
+  for (var i = 0; i < map.children.length; i++) {
+    if (map.children[i].classList.contains('popup')) {
+      var popup = map.children[i];
+      map.removeChild(popup);
+
+      activePin.classList.remove('map__pin--active');
+    }
+  }
+};
+// и должен показываться элемент .popup
+// создадим функцию открытия и закрытия попапа
+// var openPopup = function() {
+// popup.classList.remove('hidden');
+// }
+var pinKeyDownHandler = function (evt) {
+  if (evt.keyCode === ENTER_KEYCODE) {
+    openPopup();
+  }
+};
+
+// делегируем обработку клика на пине на блок .map__pins
+var pinsContainer = map.querySelector('.map__pins');
+pinsContainer.addEventListener('click', function (evt) {
+  var target = evt.target;
+  while (target !== pinsContainer) {
+    if (target.className === 'map__pin') {
+      pinClickHandler(target);
+
+      document.addEventListener('keydown', function (evtKeydown) {
+        if (evtKeydown.keyCode === ESC_KEYCODE) {
+          popupClose();
+        }
+      });
+      return;
+    }
+    target = target.parentNode;
+  }
 });
 
-var mapPinActive = map.querySelector('.map__pin--active');
-// обработчик для popup
-var popupClickHandler = function(evt) {
-  popup.classList.add('hidden');
+map.addEventListener('click', function (evt) {
+  var target = evt.target;
 
-  mapPinActive.classList.remove(' ')
-}
-//  При этом должен деактивироваться элемент .map__pin, который был помечен как активный
-// При показе карточки на карточке должна отображаться актуальная информация
-//  о текущем выбранном объекте (заголовок, адрес, цена, время заезда и выезда).
-//  Добавить обработчики для альтернативного ввода с клавиатуры keydown для кнопок открытия/закрытия объявлений:
+  if (target && target.className === 'popup__close') {
+    popupClose();
+  }
+});
 
-// Если пин объявления в фокусе .map__pin, то диалог с подробностями должен показываться по нажатию кнопки ENTER
-// Когда диалог открыт, то клавиша ESC должна закрывать диалог и деактивировать элемент .map__pin,
-//  который был помечен как активный
+/**
+ * обработчик при нажатии enter на кнопке закрытия попапа
+ * @param  {[type]} evt [description]
+ * @return {[type]}     [description]
+ */
+var popupKeydownHandler = function (evt) {
+  var target = evt.target;
+
+  if (target && target.className === 'popup__close') {
+    if (evt.keyCode === ENTER_KEYCODE) {
+      popupClose();
+    }
+  }
+};
 // Если диалог открыт и фокус находится на крестике,
 // то нажатие клавиши ENTER приводит к закрытию диалога и деактивации элемента .map__pin, который был помечен как активный
+map.addEventListener('keydown', popupKeydownHandler, true);
+
+// module4-task2!!!
+// валидация формы
+// Проверка правильности введенных данных
+
+// Поля «время заезда» и «время выезда» синхронизированы.
+// При изменении одного из полей, значение второго автоматически выставляется точно таким же — например,
+//  если время заезда указано «после 14», то время выезда будет равно «до 14»
+var timeIn = noticeForm.querySelector('#timein');
+var timeOut = noticeForm.querySelector('#timeout');
+
+timeIn.addEventListener('change', function (evt) {
+  timeOut.value = timeIn.value;
+});
+
+// Значение поля «Тип жилья» синхронизировано с минимальной ценой следующим образом:
+// «Лачуга» — минимальная цена 0
+// «Квартира» — минимальная цена 1000
+// «Дом» — минимальная цена 5000
+// «Дворец» — минимальная цена 10000
+// С типом жилья должна синхронизироваться только минимальная цена,
+// само значение поля при этом изменять не нужно.
+//  Если у пользователя введены данные, которые не подходят,
+// эта проблема будет найдена на этапе валидации формы в момент отправки
+var typeOfAccomodation = noticeForm.querySelector('#type');
+var price = noticeForm.querySelector('#price');
+
+var TYPE_TO_PRICE = {
+  bungalo: 0,
+  flat: 1000,
+  house: 5000,
+  palace: 10000
+};
+
+var syncPrice = function() {
+  var selectedField = typeOfAccomodation.value;
+  price.min = TYPE_TO_PRICE[selectedField];
+};
+
+// при загрузке страницы синхронизируем поле формы
+window.syncPrice();
+
+var changeTypeOfAccomodationHandler = function() {
+  syncPrice();
+};
+
+typeOfAccomodation.addEventListener('change', changeTypeOfAccomodationHandler);
+
+noticeForm.addEventListener('submit', function (event) {
+
+  console.log('clicked on validate')
+})
+
+// Количество комнат связано с количеством гостей:
+// 1 комната — «для одного гостя»
+// 2 комнаты — «для 2-х или 1-го гостя»
+// 3 комнаты — «для 2-х, 1-го или 3-х гостей»
+// 100 комнат — «не для гостей==»
+// При изменении количества комнат должно автоматически меняться количество гостей,
+// которых можно разместить. В обратную сторону синхронизацию делать не нужно
+var roomNumber = noticeForm.querySelector('#room_number');
+var capacity = noticeForm.querySelector('#capacity');
+// ??? здесь затык!!!
+
+
+// При отправке формы нужно проверить правильно ли заполнены поля и если какие-то поля заполнены неверно,
+//  то нужно выделить неверные поля красной рамкой
+var titleInput = noticeForm.querySelector('#title');
+var addressInput = noticeForm.querySelector('#address');
+var priceInput = noticeForm.querySelector('#price');
+
+
+titleInput.addEventListener('invalid', function (evt) {
+    if (titleInput.validity.tooShort) {
+    titleInput.setCustomValidity('Заголовок должен состоять минимум из ' + titleInput.getAttribute('minlength') + ' символов');
+  } else if (titleInput.validity.tooLong) {
+    titleInput.setCustomValidity('Заголовок должен состоять максимум из ' + titleInput.getAttribute('maxlength') + ' символов');
+  } else if (titleInput.validity.valueMissing) {
+    titleInput.setCustomValidity('Обязательное поле');
+  } else {
+    titleInput.setCustomValidity('');
+  }
+});
+
+var addressInputHandler = function(evt) {
+  if (addressInput.validity.valueMissing) {
+    addressInput.setCustomValidity('Обязательное поле!');
+  } else {
+    addressInput.setCustomValidity('');
+  }
+};
+
+var priceInputHandler = function(evt) {
+  if (priceInput.validity.rangeUnderflow) {
+    priceInput.setCustomValidity('Минимальное значение цены ' + min);
+  } else if (priceInput.validity.tooLong) {
+    priceInput.setCustomValidity('Максимальное значение цены ' + max);
+  } else if (priceInput.validity.valueMissing) {
+    priceInput.setCustomValidity('Обязательное поле!');
+  } else {
+    priceInput.setCustomValidity('');
+  }
+};
+
+priceInput.addEventListener('invalid', priceInputHandler);
+addressInput.addEventListener('invalid', addressInputHandler);
