@@ -441,7 +441,12 @@ noticeForm.addEventListener('submit', function (event) {
 // которых можно разместить. В обратную сторону синхронизацию делать не нужно
 var roomNumber = noticeForm.querySelector('#room_number');
 var capacity = noticeForm.querySelector('#capacity');
-// ??? здесь затык!!!
+// напишем свитч в котором будем дизеблить ненужные опции
+// var syncRooms = function () {
+//   switch (rooms) {
+//     case
+//   }
+// }
 
 
 // При отправке формы нужно проверить правильно ли заполнены поля и если какие-то поля заполнены неверно,
@@ -485,3 +490,5 @@ var priceInputHandler = function(evt) {
 
 priceInput.addEventListener('invalid', priceInputHandler);
 addressInput.addEventListener('invalid', addressInputHandler);
+
+
