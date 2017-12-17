@@ -427,11 +427,6 @@ var changeTypeOfAccomodationHandler = function() {
 
 typeOfAccomodation.addEventListener('change', changeTypeOfAccomodationHandler);
 
-noticeForm.addEventListener('submit', function (event) {
-
-  console.log('clicked on validate')
-})
-
 // Количество комнат связано с количеством гостей:
 // 1 комната — «для одного гостя»
 // 2 комнаты — «для 2-х или 1-го гостя»
@@ -441,54 +436,91 @@ noticeForm.addEventListener('submit', function (event) {
 // которых можно разместить. В обратную сторону синхронизацию делать не нужно
 var roomNumber = noticeForm.querySelector('#room_number');
 var capacity = noticeForm.querySelector('#capacity');
-// напишем свитч в котором будем дизеблить ненужные опции
-// var syncRooms = function () {
-//   switch (rooms) {
-//     case
-//   }
-// }
+var capacitys = capacity.options;
+var roomNumbers = roomNumber.options;
 
+// дизеблим при загрузке все опции capacity
+var disabledOption = function() {
+  Array.from(capacitys).forEach(function(option) {
+    option.disabled = true;
+  })
+};
 
-// При отправке формы нужно проверить правильно ли заполнены поля и если какие-то поля заполнены неверно,
-//  то нужно выделить неверные поля красной рамкой
+window.disabledOption();
+
+// функция для синхронизации поля выбора количества комнат
+var roomNumberSync = function () {
+  Array.from(capacitys).filter(function(capacity) {
+    if (roomNumber.value === '100') {
+      capacity.value === '0';
+      capacity.selected = true;
+      capacity.disabled = true;
+    }
+    else if (capacity.value <= roomNumber.value && capacity.value !== '0') {
+      if (capacity.value === roomNumber.value) {
+        capacity.selected = true;
+      }
+      capacity.disabled = false;
+    }
+    else {
+      capacity.disabled = true;
+    }
+  });
+};
+
+// при загрузке страницы
+// синхронизируем поле выбора количества комнат
+// с полем количества гостей
+window.roomNumberSync();
+// при изменении значения количества комнат
+// изменяем доступные значения количества гостей
+roomNumber.addEventListener('change', roomNumberSync);
+
 var titleInput = noticeForm.querySelector('#title');
 var addressInput = noticeForm.querySelector('#address');
 var priceInput = noticeForm.querySelector('#price');
 
-
-titleInput.addEventListener('invalid', function (evt) {
-    if (titleInput.validity.tooShort) {
-    titleInput.setCustomValidity('Заголовок должен состоять минимум из ' + titleInput.getAttribute('minlength') + ' символов');
-  } else if (titleInput.validity.tooLong) {
-    titleInput.setCustomValidity('Заголовок должен состоять максимум из ' + titleInput.getAttribute('maxlength') + ' символов');
-  } else if (titleInput.validity.valueMissing) {
-    titleInput.setCustomValidity('Обязательное поле');
+var inputValidity = function (input) {
+  if (input.validity.tooShort) {
+    input.setCustomValidity('Заголовок должен состоять минимум из ' + input.getAttribute('minlength') + ' символов');
+  } else if (input.validity.tooLong) {
+    input.setCustomValidity('Заголовок должен состоять максимум из ' + input.getAttribute('maxlength') + ' символов');
+  } else if (input.validity.valueMissing) {
+    input.setCustomValidity('Обязательное поле');
+  } else if (input.validity.rangeUnderflow) {
+    input.setCustomValidity('Минимальное значение цены ' + input.getAttribute('min'));
+  } else if (input.validity.tooLong) {
+    input.setCustomValidity('Максимальное значение цены ' + input.getAttribute('max'));
   } else {
-    titleInput.setCustomValidity('');
+    input.setCustomValidity('');
   }
+}
+
+titleInput.addEventListener('invalid', function () {
+  inputValidity(title);
 });
 
-var addressInputHandler = function(evt) {
-  if (addressInput.validity.valueMissing) {
-    addressInput.setCustomValidity('Обязательное поле!');
-  } else {
-    addressInput.setCustomValidity('');
-  }
-};
+priceInput.addEventListener('invalid', function () {
+  inputValidity(price);
+});
 
-var priceInputHandler = function(evt) {
-  if (priceInput.validity.rangeUnderflow) {
-    priceInput.setCustomValidity('Минимальное значение цены ' + min);
-  } else if (priceInput.validity.tooLong) {
-    priceInput.setCustomValidity('Максимальное значение цены ' + max);
-  } else if (priceInput.validity.valueMissing) {
-    priceInput.setCustomValidity('Обязательное поле!');
-  } else {
-    priceInput.setCustomValidity('');
-  }
-};
+addressInput.addEventListener('invalid', function () {
+  inputValidity(address);
+});
+// ?что-то не выводит ошибку при пустом адресе?
 
-priceInput.addEventListener('invalid', priceInputHandler);
-addressInput.addEventListener('invalid', addressInputHandler);
+capacity.addEventListener('invalid', function () {
+  inputValidity(capacity);
+});
 
+// ?уже делаем на полях формы???
+// При отправке формы нужно проверить правильно ли заполнены поля и если какие-то поля заполнены неверно,
+//  то нужно выделить неверные поля красной рамкой
+// var submitFormHandler = function (evt) {
+//   Array.from(noticeForm.elements).forEach(function(input) {
+//     inputValidity();
+//   });
+// };
+
+// noticeForm.addEventListener('submit', submitFormHandler);
 
