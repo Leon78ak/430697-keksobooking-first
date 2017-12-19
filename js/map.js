@@ -49,9 +49,10 @@ var MIN_ROOMS = 1,
 
 var PIN_HEIGHT = 18;
 
-var ESC_KEYCODE = 27,
-  ENTER_KEYCODE = 13;
-
+// переменные-разметочные теги
+window.map = document.querySelector('.map');
+window.template = document.querySelector('template');
+// window.noticeForm = document.querySelector('.notice__form');
 /**
  * возвращает случайное целое
  * @param  {number} min
@@ -171,10 +172,9 @@ var createNotice = function (usersNumb) {
 
 var notices = createNotice(usersNumb);
 
-var map = document.querySelector('.map');
 var mapPins = map.querySelector('.map__pins');
 var mapFilters = map.querySelector('.map__filters-container');
-var template = document.querySelector('template');
+
 var similarPinTemplate = template.content.querySelector('.map__pin');
 var cardTemplate = template.content.querySelector('.map__card');
 
@@ -284,10 +284,9 @@ var mainPinMouseUpHandler = function() {
 
 mapPinMain.addEventListener('mouseup', mainPinMouseUpHandler);
 
-var openPopup = function (node) {
-  var node = node;
+var openPopup = function () {
   var item = renderCard(notices.filter(function (item) {
-    if (item.id === node.getAttribute('id')) {
+    if (item.id === activePin.getAttribute('id')) {
       return item;
     }
   })[0]);
@@ -330,9 +329,7 @@ var popupClose = function() {
 // popup.classList.remove('hidden');
 // }
 var pinKeyDownHandler = function (evt) {
-  if (evt.keyCode === ENTER_KEYCODE) {
-    openPopup();
-  }
+  window.util.isEscEvent(evt, openPopup);
 };
 
 // делегируем обработку клика на пине на блок .map__pins
@@ -344,9 +341,7 @@ pinsContainer.addEventListener('click', function (evt) {
       pinClickHandler(target);
 
       document.addEventListener('keydown', function (evtKeydown) {
-        if (evtKeydown.keyCode === ESC_KEYCODE) {
-          popupClose();
-        }
+        window.util.isEscEvent(evtKeydown, popupClose);
       });
       return;
     }
@@ -371,156 +366,153 @@ var popupKeydownHandler = function (evt) {
   var target = evt.target;
 
   if (target && target.className === 'popup__close') {
-    if (evt.keyCode === ENTER_KEYCODE) {
-      popupClose();
-    }
-  }
+    window.util.isEnterEvent(evt, popupClose);
+  };
 };
 // Если диалог открыт и фокус находится на крестике,
 // то нажатие клавиши ENTER приводит к закрытию диалога и деактивации элемента .map__pin, который был помечен как активный
 map.addEventListener('keydown', popupKeydownHandler, true);
 
-// module4-task2!!!
-// валидация формы
-// Проверка правильности введенных данных
+// // module4-task2!!!
+//   // валидация формы
+//   // Проверка правильности введенных данных
 
-// Поля «время заезда» и «время выезда» синхронизированы.
-// При изменении одного из полей, значение второго автоматически выставляется точно таким же — например,
-//  если время заезда указано «после 14», то время выезда будет равно «до 14»
-var timeIn = noticeForm.querySelector('#timein');
-var timeOut = noticeForm.querySelector('#timeout');
+//   // Поля «время заезда» и «время выезда» синхронизированы.
+//   // При изменении одного из полей, значение второго автоматически выставляется точно таким же — например,
+//   //  если время заезда указано «после 14», то время выезда будет равно «до 14»
+//   var timeIn = noticeForm.querySelector('#timein');
+//   var timeOut = noticeForm.querySelector('#timeout');
 
-timeIn.addEventListener('change', function (evt) {
-  timeOut.value = timeIn.value;
-});
-
-// Значение поля «Тип жилья» синхронизировано с минимальной ценой следующим образом:
-// «Лачуга» — минимальная цена 0
-// «Квартира» — минимальная цена 1000
-// «Дом» — минимальная цена 5000
-// «Дворец» — минимальная цена 10000
-// С типом жилья должна синхронизироваться только минимальная цена,
-// само значение поля при этом изменять не нужно.
-//  Если у пользователя введены данные, которые не подходят,
-// эта проблема будет найдена на этапе валидации формы в момент отправки
-var typeOfAccomodation = noticeForm.querySelector('#type');
-var price = noticeForm.querySelector('#price');
-
-var TYPE_TO_PRICE = {
-  bungalo: 0,
-  flat: 1000,
-  house: 5000,
-  palace: 10000
-};
-
-var syncPrice = function() {
-  var selectedField = typeOfAccomodation.value;
-  price.min = TYPE_TO_PRICE[selectedField];
-};
-
-// при загрузке страницы синхронизируем поле формы
-window.syncPrice();
-
-var changeTypeOfAccomodationHandler = function() {
-  syncPrice();
-};
-
-typeOfAccomodation.addEventListener('change', changeTypeOfAccomodationHandler);
-
-// Количество комнат связано с количеством гостей:
-// 1 комната — «для одного гостя»
-// 2 комнаты — «для 2-х или 1-го гостя»
-// 3 комнаты — «для 2-х, 1-го или 3-х гостей»
-// 100 комнат — «не для гостей==»
-// При изменении количества комнат должно автоматически меняться количество гостей,
-// которых можно разместить. В обратную сторону синхронизацию делать не нужно
-var roomNumber = noticeForm.querySelector('#room_number');
-var capacity = noticeForm.querySelector('#capacity');
-var capacitys = capacity.options;
-var roomNumbers = roomNumber.options;
-
-// дизеблим при загрузке все опции capacity
-var disabledOption = function() {
-  Array.from(capacitys).forEach(function(option) {
-    option.disabled = true;
-  })
-};
-
-window.disabledOption();
-
-// функция для синхронизации поля выбора количества комнат
-var roomNumberSync = function () {
-  Array.from(capacitys).filter(function(capacity) {
-    if (roomNumber.value === '100') {
-      capacity.value === '0';
-      capacity.selected = true;
-      capacity.disabled = true;
-    }
-    else if (capacity.value <= roomNumber.value && capacity.value !== '0') {
-      if (capacity.value === roomNumber.value) {
-        capacity.selected = true;
-      }
-      capacity.disabled = false;
-    }
-    else {
-      capacity.disabled = true;
-    }
-  });
-};
-
-// при загрузке страницы
-// синхронизируем поле выбора количества комнат
-// с полем количества гостей
-window.roomNumberSync();
-// при изменении значения количества комнат
-// изменяем доступные значения количества гостей
-roomNumber.addEventListener('change', roomNumberSync);
-
-var titleInput = noticeForm.querySelector('#title');
-var addressInput = noticeForm.querySelector('#address');
-var priceInput = noticeForm.querySelector('#price');
-
-var inputValidity = function (input) {
-  if (input.validity.tooShort) {
-    input.setCustomValidity('Заголовок должен состоять минимум из ' + input.getAttribute('minlength') + ' символов');
-  } else if (input.validity.tooLong) {
-    input.setCustomValidity('Заголовок должен состоять максимум из ' + input.getAttribute('maxlength') + ' символов');
-  } else if (input.validity.valueMissing) {
-    input.setCustomValidity('Обязательное поле');
-  } else if (input.validity.rangeUnderflow) {
-    input.setCustomValidity('Минимальное значение цены ' + input.getAttribute('min'));
-  } else if (input.validity.tooLong) {
-    input.setCustomValidity('Максимальное значение цены ' + input.getAttribute('max'));
-  } else {
-    input.setCustomValidity('');
-  }
-}
-
-titleInput.addEventListener('invalid', function () {
-  inputValidity(title);
-});
-
-priceInput.addEventListener('invalid', function () {
-  inputValidity(price);
-});
-
-addressInput.addEventListener('invalid', function () {
-  inputValidity(address);
-});
-// ?что-то не выводит ошибку при пустом адресе?
-
-capacity.addEventListener('invalid', function () {
-  inputValidity(capacity);
-});
-
-// ?уже делаем на полях формы???
-// При отправке формы нужно проверить правильно ли заполнены поля и если какие-то поля заполнены неверно,
-//  то нужно выделить неверные поля красной рамкой
-// var submitFormHandler = function (evt) {
-//   Array.from(noticeForm.elements).forEach(function(input) {
-//     inputValidity();
+//   timeIn.addEventListener('change', function (evt) {
+//     timeOut.value = timeIn.value;
 //   });
-// };
 
-// noticeForm.addEventListener('submit', submitFormHandler);
+//   // Значение поля «Тип жилья» синхронизировано с минимальной ценой следующим образом:
+//   // «Лачуга» — минимальная цена 0
+//   // «Квартира» — минимальная цена 1000
+//   // «Дом» — минимальная цена 5000
+//   // «Дворец» — минимальная цена 10000
+//   // С типом жилья должна синхронизироваться только минимальная цена,
+//   // само значение поля при этом изменять не нужно.
+//   //  Если у пользователя введены данные, которые не подходят,
+//   // эта проблема будет найдена на этапе валидации формы в момент отправки
+//   var typeOfAccomodation = noticeForm.querySelector('#type');
+//   var price = noticeForm.querySelector('#price');
 
+//   var TYPE_TO_PRICE = {
+//     bungalo: 0,
+//     flat: 1000,
+//     house: 5000,
+//     palace: 10000
+//   };
+
+//   var syncPrice = function() {
+//     var selectedField = typeOfAccomodation.value;
+//     price.min = TYPE_TO_PRICE[selectedField];
+//   };
+
+//   // при загрузке страницы синхронизируем поле формы
+//   window.syncPrice();
+
+//   var changeTypeOfAccomodationHandler = function() {
+//     syncPrice();
+//   };
+
+//   typeOfAccomodation.addEventListener('change', changeTypeOfAccomodationHandler);
+
+//   // Количество комнат связано с количеством гостей:
+//   // 1 комната — «для одного гостя»
+//   // 2 комнаты — «для 2-х или 1-го гостя»
+//   // 3 комнаты — «для 2-х, 1-го или 3-х гостей»
+//   // 100 комнат — «не для гостей==»
+//   // При изменении количества комнат должно автоматически меняться количество гостей,
+//   // которых можно разместить. В обратную сторону синхронизацию делать не нужно
+//   var roomNumber = noticeForm.querySelector('#room_number');
+//   var capacity = noticeForm.querySelector('#capacity');
+//   var capacitys = capacity.options;
+//   var roomNumbers = roomNumber.options;
+
+//   // дизеблим при загрузке все опции capacity
+//   var disabledOption = function() {
+//     Array.from(capacitys).forEach(function(option) {
+//       option.disabled = true;
+//     })
+//   };
+
+//   window.disabledOption();
+
+//   // функция для синхронизации поля выбора количества комнат
+//   var roomNumberSync = function () {
+//     Array.from(capacitys).filter(function(capacity) {
+//       if (roomNumber.value === '100') {
+//         capacity.value === '0';
+//         capacity.selected = true;
+//         capacity.disabled = true;
+//       }
+//       else if (capacity.value <= roomNumber.value && capacity.value !== '0') {
+//         if (capacity.value === roomNumber.value) {
+//           capacity.selected = true;
+//         }
+//         capacity.disabled = false;
+//       }
+//       else {
+//         capacity.disabled = true;
+//       }
+//     });
+//   };
+
+//   // при загрузке страницы
+//   // синхронизируем поле выбора количества комнат
+//   // с полем количества гостей
+//   window.roomNumberSync();
+//   // при изменении значения количества комнат
+//   // изменяем доступные значения количества гостей
+//   roomNumber.addEventListener('change', roomNumberSync);
+
+//   var titleInput = noticeForm.querySelector('#title');
+//   var addressInput = noticeForm.querySelector('#address');
+//   var priceInput = noticeForm.querySelector('#price');
+
+//   var inputValidity = function (input) {
+//     if (input.validity.tooShort) {
+//       input.setCustomValidity('Заголовок должен состоять минимум из ' + input.getAttribute('minlength') + ' символов');
+//     } else if (input.validity.tooLong) {
+//       input.setCustomValidity('Заголовок должен состоять максимум из ' + input.getAttribute('maxlength') + ' символов');
+//     } else if (input.validity.valueMissing) {
+//       input.setCustomValidity('Обязательное поле');
+//     } else if (input.validity.rangeUnderflow) {
+//       input.setCustomValidity('Минимальное значение цены ' + input.getAttribute('min'));
+//     } else if (input.validity.tooLong) {
+//       input.setCustomValidity('Максимальное значение цены ' + input.getAttribute('max'));
+//     } else {
+//       input.setCustomValidity('');
+//     }
+//   }
+
+//   titleInput.addEventListener('invalid', function () {
+//     inputValidity(title);
+//   });
+
+//   priceInput.addEventListener('invalid', function () {
+//     inputValidity(price);
+//   });
+
+//   addressInput.addEventListener('invalid', function () {
+//     inputValidity(address);
+//   });
+//   // ?что-то не выводит ошибку при пустом адресе?
+
+//   capacity.addEventListener('invalid', function () {
+//     inputValidity(capacity);
+//   });
+
+//   // ?уже делаем на полях формы???
+//   // При отправке формы нужно проверить правильно ли заполнены поля и если какие-то поля заполнены неверно,
+//   //  то нужно выделить неверные поля красной рамкой
+//   // var submitFormHandler = function (evt) {
+//   //   Array.from(noticeForm.elements).forEach(function(input) {
+//   //     inputValidity();
+//   //   });
+//   // };
+
+//   // noticeForm.addEventListener('submit', submitFormHandler);
