@@ -4,29 +4,14 @@
 (function () {
   // переменные-разметочные теги
   window.map = document.querySelector('.map');
+  window.noticeForm = document.querySelector('.notice__form');
   window.template = document.querySelector('template');
-  // window.noticeForm = document.querySelector('.notice__form');
-
-
   var mapFilters = map.querySelector('.map__filters-container');
-
-
-
-
-
-
-
-
-
-
-
-
   // module4
   //
   // после того как на блоке map__pin--main произойдет событие mouseup
   var mapPinMain = map.querySelector('.map__pin--main');
   var mapPin = map.querySelectorAll('.map__pin');
-  var noticeForm = document.querySelector('.notice__form');
   // добавим атрибут disabled блоку fieldset, содержащему поле формы
   var fieldset = noticeForm.querySelectorAll('fieldset');
   var activePin = null;
@@ -51,7 +36,6 @@
     for (var i = 0; i < fieldset.length; i++) {
       fieldset[i].classList.remove('disabled');
     }
-
     for (var i = 0; i < mapPin.length; i++) {
       if (mapPin[i].classList.contains('hidden')) {
         mapPin[i].classList.remove('hidden');
@@ -63,7 +47,7 @@
   mapPinMain.addEventListener('mouseup', mainPinMouseUpHandler);
 
   var openPopup = function () {
-    var item = renderCard(notices.filter(function (item) {
+    var item = window.card.renderCard(window.data.notices.filter(function (item) {
       if (item.id === activePin.getAttribute('id')) {
         return item;
       }
