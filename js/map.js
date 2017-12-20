@@ -10,8 +10,8 @@
   // module4
   //
   // после того как на блоке map__pin--main произойдет событие mouseup
-  var mapPinMain = map.querySelector('.map__pin--main');
-  var mapPin = map.querySelectorAll('.map__pin');
+  window.mapPinMain = map.querySelector('.map__pin--main');
+  window.mapPin = map.querySelectorAll('.map__pin');
   // добавим атрибут disabled блоку fieldset, содержащему поле формы
   var fieldset = noticeForm.querySelectorAll('fieldset');
   var activePin = null;
@@ -20,11 +20,14 @@
     fieldset[i].classList.add('disabled');
   }
   // скроем метки похожих объявлений
-  for (var i = 0; i < mapPin.length; i++) {
-    if (!mapPin[i].classList.contains('map__pin--main')) {
-      mapPin[i].classList.add('hidden');
+  (function () {
+    for (var i = 0; i < mapPin.length; i++) {
+      if (!mapPin[i].classList.contains('map__pin--main')) {
+        mapPin[i].classList.add('hidden');
+      }
     }
-  }
+  })();
+
   /**
    * обработчик события mouseup на главном пине
    * @param  {[type]} evt [description]
@@ -59,9 +62,6 @@
     map.insertBefore(fragmentCard, mapFilters);
   };
 
-  // отключим показ по умолчанию первой карточки из набора объявлений
-
-
   // добавляем  класс map__pin--active при клике на любой из элементов .map__pin
   var pinClickHandler = function (node) {
     // Если до этого у другого элемента существовал класс pin--active, то у этого элемента класс нужно убрать
@@ -85,11 +85,7 @@
       }
     }
   };
-  // и должен показываться элемент .popup
-  // создадим функцию открытия и закрытия попапа
-  // var openPopup = function() {
-  // popup.classList.remove('hidden');
-  // }
+
   var pinKeyDownHandler = function (evt) {
     window.util.isEscEvent(evt, openPopup);
   };

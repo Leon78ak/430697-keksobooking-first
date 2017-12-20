@@ -5,7 +5,8 @@
 
   var PIN_HEIGHT = 18;
 
-  var mapPins = map.querySelector('.map__pins');
+  var mapPins = document.querySelector('.map__pins');
+  window.template = document.querySelector('template');
   var similarPinTemplate = template.content.querySelector('.map__pin');
 
   /**
