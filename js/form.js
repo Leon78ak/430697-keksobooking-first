@@ -29,6 +29,10 @@
     timeOut.value = timeIn.value;
   });
 
+  timeOut.addEventListener('change', function (evt) {
+    timeIn.value = timeOut.value;
+  });
+
   /**
    * синхронизирует поле выбора типа жилья с полем цены
    */
@@ -47,15 +51,15 @@
 
   typeOfAccomodation.addEventListener('change', changeTypeOfAccomodationHandler);
 
-  /**
-   * делает недоступными опции с количеством гостей
-   * @return {[type]} [description]
-   */
-  var disabledOption = function() {
-    Array.from(capacitys).forEach(function(option) {
-      option.disabled = true;
-    })
-  };
+  // /**
+  //  * делает недоступными опции с количеством гостей
+  //  * @return {[type]} [description]
+  //  */
+  // var disabledOption = function() {
+  //   Array.from(capacitys).forEach(function(option) {
+  //     option.disabled = true;
+  //   })
+  // };
 
   /**
    * функция для синхронизации поля выбора количества комнат
@@ -63,10 +67,10 @@
    */
   var roomNumberSync = function () {
     Array.from(capacitys).filter(function(capacity) {
+      capacity.disabled = true;
       if (roomNumber.value === '100') {
         capacity.value === '0';
         capacity.selected = true;
-        capacity.disabled = true;
       }
       else if (capacity.value <= roomNumber.value && capacity.value !== '0') {
         if (capacity.value === roomNumber.value) {
@@ -124,20 +128,21 @@
   // ?уже делаем на полях формы???
   // При отправке формы нужно проверить правильно ли заполнены поля и если какие-то поля заполнены неверно,
   //  то нужно выделить неверные поля красной рамкой
-  // var submitFormHandler = function (evt) {
-  //   Array.from(noticeForm.elements).forEach(function(input) {
-  //     inputValidity();
-  //   });
-  // };
+  var submitFormHandler = function (evt) {
+    evt.preventDefault;
+    Array.from(noticeForm.elements).forEach(function(input) {
+      inputValidity();
+    });
+  };
 
-  // noticeForm.addEventListener('submit', submitFormHandler);
-  //
+  noticeForm.addEventListener('submit', submitFormHandler);
+
   // экспорт - синхронизация при загрузке
   // почему-то не синхронизирует????
   window.form = {
     syncPrice: syncPrice(),
     roomNumberSync: roomNumberSync(),
-    disabledOption: disabledOption()
+    // disabledOption: disabledOption()
   };
   // // при загрузке страницы синхронизируем поле формы
   // syncPrice();
