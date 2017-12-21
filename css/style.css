@@ -847,3 +847,12 @@ textarea:focus
 {
     background-position: -10px -10px;
 }
+
+.error input,
+.error textarea {
+  border: 1px solid red;
+}
+
+.error {
+  color: red;
+}
